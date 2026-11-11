@@ -1,23 +1,23 @@
-from typing import Dict, Callable, Set
+from collections.abc import Callable
 
-TransitionFuncNFA = Callable[[str | None], Set[str] | None]
+TransitionFuncNFA = Callable[[str | None], set[str] | None]
 
 
 class NFAutomaton:
     def __init__(
-            self, start_state: str, accept_states: Set[str],
-            transitions: Dict[str, TransitionFuncNFA], alphabet: Set[str]):
+        self, start_state: str, accept_states: set[str], transitions: dict[str, TransitionFuncNFA], alphabet: set[str]
+    ):
         self._start_state: str = start_state
-        self._accept_states: Set[str] = accept_states
-        self._transitions: Dict[str, TransitionFuncNFA] = transitions
-        self._alphabet: Set[str] = alphabet
+        self._accept_states: set[str] = accept_states
+        self._transitions: dict[str, TransitionFuncNFA] = transitions
+        self._alphabet: set[str] = alphabet
 
     def check(self, text: str, verbose: bool = True):
-        curr_states: Set[str] = self.epsilon_closure({self._start_state})
+        curr_states: set[str] = self.epsilon_closure({self._start_state})
         if not text and not curr_states & self._accept_states:
             return False
         if verbose:
-            print(f'Start state (after ε-closure): {curr_states}, word: {text}')
+            print(f"Start state (after ε-closure): {curr_states}, word: {text}")
         for char in text:
             if char not in self._alphabet:
                 return False
@@ -33,7 +33,7 @@ class NFAutomaton:
             next_states = self.epsilon_closure(next_states)
 
             if verbose:
-                print(f'Old state: {curr_states}; char: {char} -> New state: {next_states}')
+                print(f"Old state: {curr_states}; char: {char} -> New state: {next_states}")
 
             curr_states = next_states
             if not curr_states:
@@ -41,7 +41,7 @@ class NFAutomaton:
 
         return bool(curr_states & self._accept_states)
 
-    def epsilon_closure(self, states: Set[str]) -> set[str]:
+    def epsilon_closure(self, states: set[str]) -> set[str]:
         closure = set(states)
         stack = list(states)
 

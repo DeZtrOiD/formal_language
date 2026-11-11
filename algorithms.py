@@ -1,14 +1,14 @@
-from typing import Dict, Callable, Set, FrozenSet, List
-from NFA import NFAutomaton
+from collections import defaultdict, deque
+from collections.abc import Callable
+
 from DFA import DFAutomaton
-from collections import deque
-from collections import defaultdict
+from NFA import NFAutomaton
 
 
 def nfa_to_dfa(nfa: NFAutomaton) -> DFAutomaton:
     alphabet = nfa._alphabet
 
-    def move(states: FrozenSet[str], symbol: str) -> Set[str]:
+    def move(states: frozenset[str], symbol: str) -> set[str]:
         result: set[str] = set()
         for state in states:
             t_func = nfa._transitions.get(state)
@@ -18,18 +18,18 @@ def nfa_to_dfa(nfa: NFAutomaton) -> DFAutomaton:
                     result.update(targets)
         return result
 
-    def states_to_name(states: FrozenSet[str]) -> str:
+    def states_to_name(states: frozenset[str]) -> str:
         if not states:
             return "∅"
         return "{" + ",".join(sorted(states)) + "}"
 
-    start_set: FrozenSet[str] = frozenset(nfa.epsilon_closure({nfa._start_state}))
+    start_set: frozenset[str] = frozenset(nfa.epsilon_closure({nfa._start_state}))
 
-    unprocessed: list[FrozenSet[str]] = [start_set]
-    unprocessed_set: Set[FrozenSet[str]] = {start_set}
+    unprocessed: list[frozenset[str]] = [start_set]
+    unprocessed_set: set[frozenset[str]] = {start_set}
 
-    dfa_transitions: Dict[str, Dict[str, str]] = {}
-    processed: Set[FrozenSet[str]] = set()
+    dfa_transitions: dict[str, dict[str, str]] = {}
+    processed: set[frozenset[str]] = set()
 
     dfa_accept_states: set[str] = set()
 
@@ -55,9 +55,10 @@ def nfa_to_dfa(nfa: NFAutomaton) -> DFAutomaton:
                     unprocessed_set.add(next_set)
                     unprocessed.append(next_set)
 
-    final_transitions: Dict[str, Callable[[str], str | None]] = {}
+    final_transitions: dict[str, Callable[[str], str | None]] = {}
     for state_name, trans_map in dfa_transitions.items():
-        def make_transition(t_map: Dict[str, str]):
+
+        def make_transition(t_map: dict[str, str]):
             return lambda symbol: t_map.get(symbol)
 
         final_transitions[state_name] = make_transition(trans_map)
@@ -65,10 +66,7 @@ def nfa_to_dfa(nfa: NFAutomaton) -> DFAutomaton:
     start_name = states_to_name(start_set)
 
     return DFAutomaton(
-        start_state=start_name,
-        accept_states=dfa_accept_states,
-        transitions=final_transitions,
-        alphabet=alphabet
+        start_state=start_name, accept_states=dfa_accept_states, transitions=final_transitions, alphabet=alphabet
     )
 
 
@@ -81,7 +79,7 @@ def minimize_dfa(dfa: DFAutomaton) -> DFAutomaton:
     return _build_minimized_dfa(partition, dfa, states)
 
 
-def _find_reachable_states(dfa: DFAutomaton) -> Set[str]:
+def _find_reachable_states(dfa: DFAutomaton) -> set[str]:
     reachable = set()
     queue = deque([dfa._start_state])
     while queue:
@@ -100,17 +98,13 @@ def _find_reachable_states(dfa: DFAutomaton) -> Set[str]:
     return reachable
 
 
-def _initial_partition(states: Set[str], accept_states: Set[str]) -> List[Set[str]]:
+def _initial_partition(states: set[str], accept_states: set[str]) -> list[set[str]]:
     accepting = states & accept_states
     non_accepting = states - accept_states
     return [s for s in (accepting, non_accepting) if s]
 
 
-def _refine_partition(
-    partition: List[Set[str]],
-    dfa: DFAutomaton,
-    states: Set[str]
-) -> List[Set[str]]:
+def _refine_partition(partition: list[set[str]], dfa: DFAutomaton, states: set[str]) -> list[set[str]]:
     changed = True
 
     while changed:
@@ -128,11 +122,7 @@ def _refine_partition(
     return partition
 
 
-def _split_block(
-    block: Set[str],
-    partition: List[Set[str]],
-    dfa: DFAutomaton
-) -> List[Set[str]]:
+def _split_block(block: set[str], partition: list[set[str]], dfa: DFAutomaton) -> list[set[str]]:
 
     state_to_block_idx = {state: idx for idx, b in enumerate(partition) for state in b}
 
@@ -151,14 +141,10 @@ def _split_block(
     return list(signatures.values())
 
 
-def _build_minimized_dfa(
-    partition: List[Set[str]],
-    dfa: DFAutomaton,
-    states: Set[str]
-) -> DFAutomaton:
+def _build_minimized_dfa(partition: list[set[str]], dfa: DFAutomaton, states: set[str]) -> DFAutomaton:
 
-    block_names: Dict[frozenset[str], str] = {}
-    state_to_block: Dict[str, frozenset[str]] = {}
+    block_names: dict[frozenset[str], str] = {}
+    state_to_block: dict[str, frozenset[str]] = {}
     accept_states = set()
 
     for block in partition:
@@ -171,7 +157,7 @@ def _build_minimized_dfa(
         if block & dfa._accept_states:
             accept_states.add(representative)
 
-    transitions: Dict[str, Callable[[str], str | None]] = {}
+    transitions: dict[str, Callable[[str], str | None]] = {}
 
     for block in partition:
         representative = block_names[frozenset(block)]
@@ -181,10 +167,8 @@ def _build_minimized_dfa(
         if t_func is None:
             continue
 
-        t_dict: Dict[str, str] = {
-            sym: block_names[state_to_block[n]]
-            for sym in dfa._alphabet
-            if (n := t_func(sym)) is not None
+        t_dict: dict[str, str] = {
+            sym: block_names[state_to_block[n]] for sym in dfa._alphabet if (n := t_func(sym)) is not None
         }
 
         transitions[representative] = lambda sym, d=t_dict: d.get(sym)
@@ -193,5 +177,5 @@ def _build_minimized_dfa(
         start_state=block_names[state_to_block[dfa._start_state]],
         accept_states=accept_states,
         transitions=transitions,
-        alphabet=dfa._alphabet
+        alphabet=dfa._alphabet,
     )
