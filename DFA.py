@@ -1,6 +1,6 @@
 from collections.abc import Callable
 
-TransitionFuncDFA = Callable[[str], str | None]
+type TransitionFuncDFA = Callable[[str], str | None]
 
 
 class DFAutomaton:

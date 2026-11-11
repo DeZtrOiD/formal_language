@@ -1,6 +1,6 @@
 from collections.abc import Callable
 
-TransitionFuncNFA = Callable[[str | None], set[str] | None]
+type TransitionFuncNFA = Callable[[str | None], set[str] | None]
 
 
 class NFAutomaton:
