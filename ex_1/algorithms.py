@@ -1,8 +1,8 @@
 from collections import defaultdict, deque
 from collections.abc import Callable
 
-from DFA import DFAutomaton
-from NFA import NFAutomaton
+from ex_1.DFA import DFAutomaton
+from ex_1.NFA import NFAutomaton
 
 
 def nfa_to_dfa(nfa: NFAutomaton) -> DFAutomaton:

@@ -1,7 +1,7 @@
 import string
 
-from DFA import DFAutomaton
-from NFA import NFAutomaton
+from ex_1.DFA import DFAutomaton
+from ex_1.NFA import NFAutomaton
 
 
 def init_automaton_ex_1_1() -> DFAutomaton:
