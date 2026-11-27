@@ -1,8 +1,7 @@
 from collections import defaultdict, deque
-from collections.abc import Callable
 
-from ex_1.DFA import DFAutomaton
-from ex_1.NFA import NFAutomaton
+from DFA import DFAutomaton, TransitionFuncDFA
+from NFA import NFAutomaton
 
 
 def nfa_to_dfa(nfa: NFAutomaton) -> DFAutomaton:
@@ -55,7 +54,7 @@ def nfa_to_dfa(nfa: NFAutomaton) -> DFAutomaton:
                     unprocessed_set.add(next_set)
                     unprocessed.append(next_set)
 
-    final_transitions: dict[str, Callable[[str], str | None]] = {}
+    final_transitions: dict[str, TransitionFuncDFA] = {}
     for state_name, trans_map in dfa_transitions.items():
 
         def make_transition(t_map: dict[str, str]):
@@ -157,7 +156,7 @@ def _build_minimized_dfa(partition: list[set[str]], dfa: DFAutomaton, states: se
         if block & dfa._accept_states:
             accept_states.add(representative)
 
-    transitions: dict[str, Callable[[str], str | None]] = {}
+    transitions: dict[str, TransitionFuncDFA] = {}
 
     for block in partition:
         representative = block_names[frozenset(block)]
